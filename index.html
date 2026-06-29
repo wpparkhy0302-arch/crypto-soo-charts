@@ -132,7 +132,23 @@
   <!-- ── CYCLE PAGE ── -->
   <div class="page active" id="page-cycle">
     <div id="cy_wrap">
+      <div id="ad-top" style="width:100%;max-width:1100px;padding:6px 0 2px">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-format="autorelaxed"
+             data-ad-client="ca-pub-4915763186883222"
+             data-ad-slot="3561703575"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
       <div id="cy_cw"><canvas id="cy_c" width="1100" height="620"></canvas></div>
+      <div id="ad-bottom" style="width:100%;max-width:1100px;padding:2px 0 6px">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-format="autorelaxed"
+             data-ad-client="ca-pub-4915763186883222"
+             data-ad-slot="3561703575"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
       <div id="cy_ctrl">
         <button id="cy_pbtn"><i class="ti ti-player-play" id="cy_pico" aria-hidden="true"></i> Play</button>
         <input type="range" id="cy_prog" min="0" max="1000" value="0" step="1">
@@ -163,14 +179,6 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           Share on X
         </button>
-      </div>
-      <div id="ad-unit" style="width:100%;max-width:1100px;padding:8px 0 16px">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-format="autorelaxed"
-             data-ad-client="ca-pub-4915763186883222"
-             data-ad-slot="3561703575"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
       </div>
     </div>
   </div>
@@ -353,17 +361,23 @@
 
   <script>
   const _wrapId={cycle:'cy_wrap',diminish:'dr_wrap',rhythm:'hr_wrap',rainbow:'rb_wrap',spiral:'sp_wrap',picycle:'pc_wrap'};
+  const _canvasId={cycle:'cy_cw',diminish:'dr_cw',rhythm:'hr_cw',rainbow:'rb_cw',spiral:'sp_cw',picycle:'pc_cw'};
+  const _AD_INS='<ins class="adsbygoogle" style="display:block" data-ad-format="autorelaxed" data-ad-client="ca-pub-4915763186883222" data-ad-slot="3561703575"></ins>';
+  function _reinitAd(el){el.innerHTML=_AD_INS;(window.adsbygoogle=window.adsbygoogle||[]).push({});}
   function switchTab(name,btn){
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('page-'+name).classList.add('active');
     const wrap=document.getElementById(_wrapId[name]);
-    const ad=document.getElementById('ad-unit');
-    if(wrap&&ad){
-      wrap.appendChild(ad);
-      ad.innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-format="autorelaxed" data-ad-client="ca-pub-4915763186883222" data-ad-slot="3561703575"></ins>';
-      (window.adsbygoogle=window.adsbygoogle||[]).push({});
+    const canvas=document.getElementById(_canvasId[name]);
+    const adTop=document.getElementById('ad-top');
+    const adBot=document.getElementById('ad-bottom');
+    if(wrap&&canvas&&adTop&&adBot){
+      wrap.insertBefore(adTop,wrap.firstChild);
+      canvas.insertAdjacentElement('afterend',adBot);
+      _reinitAd(adTop);
+      _reinitAd(adBot);
     }
   }
   </script>
