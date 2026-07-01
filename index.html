@@ -375,29 +375,44 @@
   const _AD_TOP_INS='<ins class="adsbygoogle" style="display:block;text-align:center;" data-ad-layout="in-article" data-ad-format="fluid" data-ad-client="ca-pub-4915763186883222" data-ad-slot="9997073817"></ins>';
   const _AD_BOT_INS='<ins class="adsbygoogle" style="display:block;height:90px" data-ad-client="ca-pub-4915763186883222" data-ad-slot="3561703575" data-ad-format="auto" data-full-width-responsive="true"></ins>';
   function _reinitAd(el,ins){el.innerHTML=ins;(window.adsbygoogle=window.adsbygoogle||[]).push({});}
-  let _recorder=null,_chunks=[];
+  let _recorder=null,_chunks=[],_recCanvas=null,_recCtx=null,_recRaf=null;
+  function _stopRecRaf(){if(_recRaf){cancelAnimationFrame(_recRaf);_recRaf=null;}}
   function toggleRecording(){
     const btn=document.getElementById('rec-btn');
     if(_recorder&&_recorder.state==='recording'){
+      _stopRecRaf();
       _recorder.stop();
       btn.textContent='⏺ 녹화';
       btn.style.background='rgba(255,255,255,0.08)';
       btn.style.borderColor='rgba(255,255,255,0.25)';
     } else {
-      const canvas=document.querySelector('.page.active canvas');
-      if(!canvas){alert('녹화할 차트를 먼저 선택해주세요.');return;}
-      const mimeType=['video/webm;codecs=vp9','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
-      const stream=canvas.captureStream(30);
+      const srcCanvas=document.querySelector('.page.active canvas');
+      if(!srcCanvas){alert('녹화할 차트를 먼저 선택해주세요.');return;}
+      /* 배경색 합성용 오프스크린 캔버스 */
+      _recCanvas=document.createElement('canvas');
+      _recCanvas.width=srcCanvas.width;
+      _recCanvas.height=srcCanvas.height;
+      _recCtx=_recCanvas.getContext('2d');
+      /* 매 프레임 배경+차트 합성 */
+      function drawFrame(){
+        _recCtx.fillStyle='#0d0d0f';
+        _recCtx.fillRect(0,0,_recCanvas.width,_recCanvas.height);
+        _recCtx.drawImage(srcCanvas,0,0);
+        _recRaf=requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
+      const mimeType=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
+      const stream=_recCanvas.captureStream(30);
       _chunks=[];
-      _recorder=new MediaRecorder(stream,{mimeType});
+      _recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:8000000});
       _recorder.ondataavailable=e=>{if(e.data.size>0)_chunks.push(e.data);};
       _recorder.onstop=()=>{
         const blob=new Blob(_chunks,{type:mimeType});
         const url=URL.createObjectURL(blob);
         const a=document.createElement('a');
-        const ext=mimeType.includes('mp4')?'mp4':'webm';
-        a.href=url;a.download='chart-'+Date.now()+'.'+ext;a.click();
+        a.href=url;a.download='chart-'+Date.now()+'.webm';a.click();
         URL.revokeObjectURL(url);
+        _recCanvas=null;_recCtx=null;
       };
       _recorder.start(100);
       btn.textContent='⏹ 녹화 중지';
