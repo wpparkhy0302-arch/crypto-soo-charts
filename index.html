@@ -129,6 +129,12 @@
     <button class="tab" onclick="switchTab('rainbow',this)">Rainbow Chart</button>
     <button class="tab" onclick="switchTab('spiral',this)">4Y Spiral</button>
     <button class="tab" onclick="switchTab('picycle',this)">Pi Cycle Top</button>
+    <button id="rec-btn" onclick="toggleRecording()"
+            style="flex-shrink:0;margin-left:auto;padding:5px 12px;font-size:12px;
+                   background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.25);
+                   border-radius:8px;color:#fff;cursor:pointer;white-space:nowrap;transition:background 0.14s">
+      ⏺ 녹화
+    </button>
   </nav>
 
   <!-- ── CYCLE PAGE ── -->
@@ -369,6 +375,36 @@
   const _AD_TOP_INS='<ins class="adsbygoogle" style="display:block;text-align:center;" data-ad-layout="in-article" data-ad-format="fluid" data-ad-client="ca-pub-4915763186883222" data-ad-slot="9997073817"></ins>';
   const _AD_BOT_INS='<ins class="adsbygoogle" style="display:block;height:90px" data-ad-client="ca-pub-4915763186883222" data-ad-slot="3561703575" data-ad-format="auto" data-full-width-responsive="true"></ins>';
   function _reinitAd(el,ins){el.innerHTML=ins;(window.adsbygoogle=window.adsbygoogle||[]).push({});}
+  let _recorder=null,_chunks=[];
+  function toggleRecording(){
+    const btn=document.getElementById('rec-btn');
+    if(_recorder&&_recorder.state==='recording'){
+      _recorder.stop();
+      btn.textContent='⏺ 녹화';
+      btn.style.background='rgba(255,255,255,0.08)';
+      btn.style.borderColor='rgba(255,255,255,0.25)';
+    } else {
+      const canvas=document.querySelector('.page.active canvas');
+      if(!canvas){alert('녹화할 차트를 먼저 선택해주세요.');return;}
+      const mimeType=['video/webm;codecs=vp9','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||'video/webm';
+      const stream=canvas.captureStream(30);
+      _chunks=[];
+      _recorder=new MediaRecorder(stream,{mimeType});
+      _recorder.ondataavailable=e=>{if(e.data.size>0)_chunks.push(e.data);};
+      _recorder.onstop=()=>{
+        const blob=new Blob(_chunks,{type:mimeType});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        const ext=mimeType.includes('mp4')?'mp4':'webm';
+        a.href=url;a.download='chart-'+Date.now()+'.'+ext;a.click();
+        URL.revokeObjectURL(url);
+      };
+      _recorder.start(100);
+      btn.textContent='⏹ 녹화 중지';
+      btn.style.background='rgba(220,30,30,0.5)';
+      btn.style.borderColor='rgba(255,80,80,0.6)';
+    }
+  }
   function switchTab(name,btn){
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
